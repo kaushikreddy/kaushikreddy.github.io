@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Kaushik's Blog</title><link href="https://kaushikreddy.github.io/" rel="alternate"></link><link href="https://kaushikreddy.github.io/feeds/all.atom.xml" rel="self"></link><id>https://kaushikreddy.github.io/</id><updated>2015-03-27T00:00:00-05:00</updated><entry><title>SSH Config</title><link href="https://kaushikreddy.github.io/ssh-config.html" rel="alternate"></link><published>2015-03-27T00:00:00-05:00</published><updated>2015-03-27T00:00:00-05:00</updated><author><name>Kaushik</name></author><id>tag:kaushikreddy.github.io,2015-03-27:/ssh-config.html</id><summary type="html">&lt;h1&gt;Description&lt;/h1&gt;
+&lt;p&gt;In our current setup, to access a machine, we need to go through a jump server.
+Without an ~/.sssh/config file, the step involves multiple ssh commands&lt;/p&gt;
+&lt;p&gt;This guide shows how to ssh to remote servers with a single ssh command&lt;/p&gt;
+&lt;h1&gt;Without ssh config&lt;/h1&gt;
+&lt;p&gt;a) Connect to host "server …&lt;/p&gt;</summary><content type="html">&lt;h1&gt;Description&lt;/h1&gt;
+&lt;p&gt;In our current setup, to access a machine, we need to go through a jump server.
+Without an ~/.sssh/config file, the step involves multiple ssh commands&lt;/p&gt;
+&lt;p&gt;This guide shows how to ssh to remote servers with a single ssh command&lt;/p&gt;
+&lt;h1&gt;Without ssh config&lt;/h1&gt;
+&lt;p&gt;a) Connect to host "server" using host "jump"&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ssh -v jump -t ssh -v server
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;or&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ssh -o ProxyJump=jump server
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;b) Connect to host "server" using host "jump" with port forwarding for port 8082&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ssh -v -L8082:localhost:8082 jump  -t ssh -v -L8082:localhost:8082 server
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1&gt;With ssh config&lt;/h1&gt;
+&lt;p&gt;a) Connect to host "server" using host "jump"&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ssh -v server
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;b) Connect to host "server" using host "jump" with port forwarding for port 8082&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ssh -v -L8082:localhost:8082 luigi
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1&gt;Steps&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;edit ~/.ssh/config on your local machine&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;nano ~/.ssh/config
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;ul&gt;
+&lt;li&gt;Copy the attached ssh_config file&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;Tests&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;ssh to our etl machine (luigi)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ssh -v luigi 
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;ul&gt;
+&lt;li&gt;ssh to our etl machine (luigi) with port forwarding&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ssh -v -L8082:localhost:8082 luigi
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;ul&gt;
+&lt;li&gt;copy local file to etl machine &lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;scp -r data/sample.txt luigi:/tmp
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1&gt;Notes&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;Old Version of ssh (openss)
+If you have an older version of ssh (&amp;lt;7.3), the directive ProxyJump won't work. 
+You have to replace the line &lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ProxyJump jump
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;with&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ProxyCommand ssh -q -W %h:%p jump
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;ul&gt;
+&lt;li&gt;Lingering ssh connections
+Sometimes, when you close the ssh connection, the ssh tunnel might still be running. To force kill the tunnel, kill all process running on the opened port&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;all process running on port 8082 &lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;lsof -i :8082
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;kill process (PID)&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;kill -9 &amp;lt;Process ID&amp;gt;
+&lt;/pre&gt;&lt;/div&gt;</content><category term="ssh"></category><category term="tutorial"></category></entry></feed>
